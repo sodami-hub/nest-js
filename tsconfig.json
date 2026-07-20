@@ -5,6 +5,10 @@
     // "rootDir": "./src",
     // "outDir": "./dist",
 
+    // ts 파일을 import할 때 .ts 확장자 사용 가능하도록 허용
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "nodenext",
