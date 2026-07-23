@@ -3,6 +3,7 @@
 /node_modules
 /build
 /tmp
+learn-express/node_modules
 
 # Logs
 logs
