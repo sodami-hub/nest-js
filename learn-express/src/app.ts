@@ -7,6 +7,9 @@ import session from 'express-session';
 import multer from 'multer';
 import fs from 'fs';
 
+import indexRouter from './routes/index.ts';
+import userRouter from './routes/user.ts';
+
 try {
     fs.readdirSync('uploads');
 } catch (error) {
@@ -123,9 +126,17 @@ app.post('/noFile', upload.none(), (req, res) => {
     res.send('ok');
 });
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(import.meta.dirname, 'index.html'));
-});
+
+/* 
+Express.use() : Express 애플리케이션에 미들웨어를 연결하는 메서드이다.
+아래 코드또한 본질적으로는 미들웨어 함수이다. 
+인자로 전달한 모듈은 Express.Router() 객체를 반환하고 있고, 라우터는 "라우팅 기능을 가진 미들웨어" 라고 이해할 수 있다.
+
+결국 앞선 미들웨어를 지나오고 '/' 경로로 요청이 들어오면 indexRouter 라우터가 실행되고,
+'/user' 경로로 요청이 들어오면 userRouter 라우터가 실행된다.
+*/
+app.use('/', indexRouter);
+app.use('/user', userRouter);
 
 app.get('/form', (req, res) => {
     res.sendFile(path.join(import.meta.dirname, 'multipart.html'));
