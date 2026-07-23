@@ -1,0 +1,32 @@
+{
+    "name": "learn-express",
+    "version": "0.0.1",
+    "description": "learn-express with typescript",
+    "repository": {
+        "type": "git",
+        "url": "git"
+    },
+    "license": "MIT",
+    "author": "sodami",
+    "type": "module",
+    "main": "app.ts",
+    "scripts": {
+        "test": "echo \\\"Error: no test specified\\\" && exit 1",
+        "start": "nodemon --exec node --env-file=./.env ./src/app.ts"
+    },
+    "dependencies": {
+        "cookie-parser": "^1.4.7",
+        "express": "^5.2.1",
+        "express-session": "^1.19.0",
+        "morgan": "^1.11.0",
+        "multer": "^2.2.0"
+    },
+    "devDependencies": {
+        "@types/cookie-parser": "^1.4.10",
+        "@types/express": "^5.0.6",
+        "@types/express-session": "^1.19.0",
+        "@types/morgan": "^1.9.10",
+        "@types/multer": "^2.2.0",
+        "nodemon": "^3.1.14"
+    }
+}
