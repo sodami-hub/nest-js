@@ -12,7 +12,7 @@
     "main": "app.ts",
     "scripts": {
         "test": "echo \\\"Error: no test specified\\\" && exit 1",
-        "start": "nodemon --env-file=.env app.ts"
+        "start": "nodemon --exec node --env-file=./.env ./src/app.ts"
     },
     "dependencies": {
         "cookie-parser": "^1.4.7",

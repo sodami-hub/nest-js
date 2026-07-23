@@ -1,0 +1,23 @@
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="image" />
+    <input type="text" name="title" />
+    <button type="submit">Upload</button>
+</form>
+</br></br>
+<form action="/uploads" method="post" enctype="multipart/form-data">
+    <input type="file" name="many" multiple/>
+    <input type="text" name="title" />
+    <button type="submit">Uploads</button>
+</form>
+</br></br>
+<form action="/dynamic" method="post" enctype="multipart/form-data">
+    <input type="file" name="image1" />
+    <input type="file" name="image2" />
+    <input type="text" name="title" />
+    <button type="submit">Dynamic</button>
+</form>
+</br></br>
+<form action="/noFile" method="post" enctype="multipart/form-data">
+    <input type="text" name="title" />
+    <button type="submit">noFile</button>
+</form>
