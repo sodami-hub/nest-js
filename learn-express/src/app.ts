@@ -141,9 +141,30 @@ app.get('/form', (req, res) => {
     res.sendFile(path.join(import.meta.dirname, 'multipart.html'));
 });
 
+// 와일드카드(*) 라우터 : 모든 요청을 처리하는 라우터, 라우터의 마지막에 위치해야 한다.
+/* 선택적 라우터
+'/*wild' => /wild, /wild/abc, /wild/abc/def 등 모든 요청을 처리한다.
+그러나 '/' 요청은 처리하지 못한다. (위에서 처리하는 라우터가 없다고 하더라도)
+'/' 요청까지 처리하고 싶으면 '/{*wild}' 라고 작성해야 한다. (중괄호 안에 *를 넣어야 한다.) => 선택적 라우터
+예를들어 
+'/post{*name}' => /post, /post/abc, /post/abc/def 등 모든 요청을 처리한다.
+'/post*name' => /post 는 처리하지 못한다. 
+*/
+app.use('/*wild', (req, res, next) => {
+    if(req.baseUrl === '/abc') { // /abc 요청이 들어오면 next()를 호출해서 다음 라우터로 이동한다.(404 처리)
+        return next();
+    }
+    res.status(200).send('나머지 모든 라우터에 매칭되는 와일드카드 라우터');
+})
+
+// 404 Not Found 처리 미들웨어
+app.use((req, res, next) => {
+    res.status(404).send('Not Found');
+})
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
-    res.status(404).send(err.message);
+    res.status(500).send(err.message);
 });
 
 app.listen(app.get('port'), () => {
