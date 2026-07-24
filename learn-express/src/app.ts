@@ -6,19 +6,26 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import multer from 'multer';
 import fs from 'fs';
+import nunjucks from 'nunjucks';
+
+import indexRouter from './routes/index.ts';
+import userRouter from './routes/user.ts';
+import formRouter from './routes/form.ts';
 
 try {
     fs.readdirSync('uploads');
 } catch (error) {
     fs.mkdirSync('uploads');
 }
+
+// ✨ multer : => ./routes/form.ts 파일에서 multer를 사용하고 있다.
 /* multer : 멀티파트(이미지, 동영상, 파일) 데이터를 처리하는 미들웨어
 multer 함수의 인수로 설정을 넣는다.
 storage : 저장할 위치(destination)와 파일 이름(filename)을 설정할 수 있다.
     - req에는 요청에 대한 정보, file에는 업로드된 파일에 대한 정보, done은 콜백함수
     - 아래 설정에는 uploads 폴더에 [파일명+현재시간.확장자] 형태로 저장된다.
 limits : 업로드에 대한 제한 사항을 설정할 수 있다. (파일 크기, 파일 개수 등)
-*/
+
 const upload = multer({
     storage: multer.diskStorage({
         destination(req, file, done) {
@@ -31,9 +38,20 @@ const upload = multer({
     }),
     limits: { fileSize: 5 * 1024 * 1024 },
 });
+*/
 
 const app = express();
 app.set('port', process.env.PORT || 3000);
+
+const viewPath = path.join(import.meta.dirname, 'views');
+// nunjucks : 템플릿 엔진, HTML 파일을 렌더링할 수 있다. (ejs, pug, handlebars 등도 가능)
+// 템플릿 엔진을 사용하려면 res.render() 메서드를 사용해야 한다. (res.send()는 템플릿 엔진을 사용하지 않는다.)
+// cf. routes/index.ts 파일에서 res.render() 메서드를 사용해서 템플릿 엔진을 사용하고 있다.
+app.set('view engine', 'html'); // html과 구분하고 싶으면 njk 확장자를 사용한다.
+nunjucks.configure(viewPath, {  // 템플릿 파일들의 위치 viewPath
+    express: app,
+    watch: true, // html 파일이 변경되면 자동으로 렌더링한다. chokidar 라이브러리를 사용한다. (설치 필요)
+});
 
 /*
 앞으로 사용할 미들웨어를 장착한 상태.. 설치된 패키지들을 불러서 app.use에 연결
@@ -94,46 +112,51 @@ app.use(
     }),
 );
 
-app.get('/upload', (req, res) => {
-    res.sendFile(path.join(import.meta.dirname, 'multipart.html'));
+/* 
+Express.use() : Express 애플리케이션에 미들웨어를 연결하는 메서드이다.
+아래 코드또한 본질적으로는 미들웨어 함수이다. 
+인자로 전달한 모듈은 Express.Router() 객체를 반환하고 있고, 라우터는 "라우팅 기능을 가진 미들웨어" 라고 이해할 수 있다.
+
+결국 앞선 미들웨어를 지나오고 '/' 경로로 요청이 들어오면 indexRouter 라우터가 실행되고,
+'/user' 경로로 요청이 들어오면 userRouter 라우터가 실행된다.
+*/
+app.use('/', indexRouter);
+app.use('/user', userRouter);
+app.use('/form', formRouter); // form 라우터 연결
+
+// 와일드카드(*) 라우터 : 모든 요청을 처리하는 라우터, 라우터의 마지막에 위치해야 한다.
+/* 선택적 라우터
+'/*wild' => /wild, /wild/abc, /wild/abc/def 등 모든 요청을 처리한다.
+그러나 '/' 요청은 처리하지 못한다. (위에서 처리하는 라우터가 없다고 하더라도)
+'/' 요청까지 처리하고 싶으면 '/{*wild}' 라고 작성해야 한다. (중괄호 안에 *를 넣어야 한다.) => 선택적 라우터
+예를들어 
+'/post{*name}' => /post, /post/abc, /post/abc/def 등 모든 요청을 처리한다.
+'/post*name' => /post 는 처리하지 못한다. 
+*/
+app.use('/*wild', (req, res, next) => {
+    if (req.baseUrl === '/abc') {
+        // /abc 요청이 들어오면 next()를 호출해서 다음 라우터로 이동한다.(404 처리)
+        return next();
+    }
+    res.status(200).send('나머지 모든 라우터에 매칭되는 와일드카드 라우터');
 });
 
-// 파일을 하나만 업로드하는 경우 single() 메서드를 사용하고, 업로드할 파일의 name 속성값을 인수로 넣는다.
-app.post('/upload', upload.single('image'), (req, res) => {
-    console.log(req.file, req.body);
-    res.send('ok');
+// 404 Not Found 처리 미들웨어
+app.use((req, res, next) => {
+    //error는 Error 객체이며, 추가로 선택적인 status 숫자 속성을 가질 수 있다.
+    const error: Error & { status?: number } = new Error(
+        `${req.method} ${req.url} 라우터가 없습니다.`,
+    );
+    error.status = 404;
+    next(error); // next()에 인자를 넣으면 에러 처리 미들웨어로 이동한다.
 });
 
-// 파일을 여러개 업로드하는 경우 array() 메서드를 사용하고, 업로드할 파일의 name 속성값을 인수로 넣는다.
-app.post('/uploads', upload.array('many'), (req, res) => {
-    console.log(req.files, req.body);
-    res.send('ok');
-});
-
-// 파일을 여러개 업ㄷ로드하지만 각각 다른 name 속성값을 가진 경우 fields() 메서드를 사용하고,
-// 업로드할 파일의 name 속성값을 배열로 넣는다.
-app.post('/dynamic', upload.fields([{ name: 'image1' }, { name: 'image2' }]), (req, res) => {
-    console.log(req.files, req.body);
-    res.send('ok');
-});
-
-// 파일을 업로드하지 않고 멀티파트 형식으로 업로드하는 경우 none() 메서드를 사용한다. (req.body만 존재)
-app.post('/noFile', upload.none(), (req, res) => {
-    console.log(req.body);
-    res.send('ok');
-});
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(import.meta.dirname, 'index.html'));
-});
-
-app.get('/form', (req, res) => {
-    res.sendFile(path.join(import.meta.dirname, 'multipart.html'));
-});
-
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err);
-    res.status(500).send(err.message);
+app.use((err: Error & {status:number}, req: Request, res: Response, next: NextFunction) => {
+    res.locals.message = err.message; // res.locals : 응답 객체에 데이터를 담아서 뷰 템플릿에서 사용할 수 있다.
+    res.locals.error = process.env.NODE_ENV !== 'production' ? err : {}; // 개발 환경에서는 에러 객체를 그대로 전달하고, 배포 환경에서는 빈 객체를 전달한다.
+    res.status(err.status || 500); // err.status가 없으면 500 Internal Server Error로 처리한다.
+    res.render('error', { title: '에러 발생' }); // error.html 뷰 템플릿을 렌더링한다.
+    
 });
 
 app.listen(app.get('port'), () => {
