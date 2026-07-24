@@ -126,7 +126,6 @@ app.post('/noFile', upload.none(), (req, res) => {
     res.send('ok');
 });
 
-
 /* 
 Express.use() : Express 애플리케이션에 미들웨어를 연결하는 메서드이다.
 아래 코드또한 본질적으로는 미들웨어 함수이다. 
@@ -144,7 +143,7 @@ app.get('/form', (req, res) => {
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err);
-    res.status(500).send(err.message);
+    res.status(404).send(err.message);
 });
 
 app.listen(app.get('port'), () => {
