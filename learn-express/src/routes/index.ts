@@ -17,8 +17,10 @@ router.get('/', (req,res,next) => {
 
 // Get '/' router
 router.get('/', (req,res) => {
-    console.log('실행된다. url: ', req.url);
-    res.send('Hello Express!')
+    // 템플릿 엔진을 사용해서 응답을 보내려면 res.render() 사용.
+    // 지정한 views 폴더를 기준으로 템플릿 파일을 찾는다. (views/index.html)  
+    // 두번째 인수는 값을 템플릿 엔진으로 보내고, 보낸 값은 넌적스의 변수와 연결된다.
+    res.render('index', { title: 'Express' });
 })
 
 /*---------------------------
