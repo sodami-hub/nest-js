@@ -1,0 +1,32 @@
+{
+    "name": "learn-drizzle",
+    "version": "0.0.1",
+    "description": "learn-drizzle with typescript",
+    "repository": {
+        "type": "git",
+        "url": "git"
+    },
+    "license": "MIT",
+    "author": "sodami",
+    "type": "module",
+    "main": "app.ts",
+    "scripts": {
+        "test": "echo \\\"Error: no test specified\\\" && exit 1",
+        "start": "nodemon --exec node --env-file=./.env ./src/app.ts"
+    },
+    "dependencies": {
+        "chokidar": "^3.6.0",
+        "drizzle-orm": "^0.45.2",
+        "express": "^5.2.1",
+        "morgan": "^1.11.0",
+        "mysql2": "^3.23.1",
+        "nunjucks": "^3.2.4"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.6",
+        "@types/morgan": "^1.9.10",
+        "@types/nunjucks": "^3.2.6",
+        "drizzle-kit": "^0.31.10",
+        "nodemon": "^3.1.14"
+    }
+}
