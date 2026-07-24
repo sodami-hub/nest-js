@@ -48,8 +48,7 @@ const viewPath = path.join(import.meta.dirname, 'views');
 // 템플릿 엔진을 사용하려면 res.render() 메서드를 사용해야 한다. (res.send()는 템플릿 엔진을 사용하지 않는다.)
 // cf. routes/index.ts 파일에서 res.render() 메서드를 사용해서 템플릿 엔진을 사용하고 있다.
 app.set('view engine', 'html'); // html과 구분하고 싶으면 njk 확장자를 사용한다.
-nunjucks.configure(viewPath, {
-    // 템플릿 파일들의 위치 ./views
+nunjucks.configure(viewPath, {  // 템플릿 파일들의 위치 viewPath
     express: app,
     watch: true, // html 파일이 변경되면 자동으로 렌더링한다. chokidar 라이브러리를 사용한다. (설치 필요)
 });
@@ -144,12 +143,20 @@ app.use('/*wild', (req, res, next) => {
 
 // 404 Not Found 처리 미들웨어
 app.use((req, res, next) => {
-    res.status(404).send('Not Found');
+    //error는 Error 객체이며, 추가로 선택적인 status 숫자 속성을 가질 수 있다.
+    const error: Error & { status?: number } = new Error(
+        `${req.method} ${req.url} 라우터가 없습니다.`,
+    );
+    error.status = 404;
+    next(error); // next()에 인자를 넣으면 에러 처리 미들웨어로 이동한다.
 });
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err);
-    res.status(500).send(err.message);
+app.use((err: Error & {status:number}, req: Request, res: Response, next: NextFunction) => {
+    res.locals.message = err.message; // res.locals : 응답 객체에 데이터를 담아서 뷰 템플릿에서 사용할 수 있다.
+    res.locals.error = process.env.NODE_ENV !== 'production' ? err : {}; // 개발 환경에서는 에러 객체를 그대로 전달하고, 배포 환경에서는 빈 객체를 전달한다.
+    res.status(err.status || 500); // err.status가 없으면 500 Internal Server Error로 처리한다.
+    res.render('error', { title: '에러 발생' }); // error.html 뷰 템플릿을 렌더링한다.
+    
 });
 
 app.listen(app.get('port'), () => {
