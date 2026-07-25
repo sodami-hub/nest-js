@@ -1,4 +1,4 @@
-import {defineConfig} from "drizzle-kit";
+import { defineConfig } from 'drizzle-kit';
 
 // process.loadEnvFile('.env');
 
@@ -9,17 +9,17 @@ if (!pw) {
 }
 
 export default defineConfig({
-    dialect: "mysql",
+    dialect: 'mysql',
     schema: './drizzle/schema.ts',
     out: './drizzle',
     dbCredentials: {
-        host:'localhost',
+        host: 'localhost',
         port: 3306,
         user: 'root',
         password: pw,
-        database: 'nodejs'
+        database: 'nodejs',
     },
 });
 
-// 여기까지 설정후 npx drizzle-kit pull 명령어를 실행하면 mysql 데이터베이스에 있는 테이블을 기반으로 
-// ./drizzle/schema.ts 파일이 생성된다. (테이블이 없으면 빈 파일이 생성된다.)    
+// 여기까지 설정후 npx drizzle-kit pull 명령어를 실행하면 mysql 데이터베이스에 있는 테이블을 기반으로
+// ./drizzle/schema.ts 파일이 생성된다. (테이블이 없으면 빈 파일이 생성된다.)
