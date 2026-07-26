@@ -5,11 +5,14 @@ import session from 'express-session';
 import morgan from 'morgan';
 import path from 'path';
 import nunjucks from 'nunjucks';
+import passport from 'passport';
 
 import type { error as myError } from './types/type.ts';
 import pageRouter from './routes/page.ts';
+import passportConfig from './passport';
 
 const app = express();
+passportConfig(); // Passport 설정
 app.set('port', process.env.PORT || 8888);
 
 app.set('view engine', 'html');
@@ -32,6 +35,8 @@ app.use(session({
         secure: false,
     },  
 }));
+app.use(passport.initialize()); // Passport 초기화
+app.use(passport.session()); // passport 세션 연결
 
 app.use('/', pageRouter);
 
