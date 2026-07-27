@@ -1,1 +1,2 @@
-export type error = Error & { status?: number };
+export type MyError = Error & { status?: number };
+export type MessageType = string | { message: string };
