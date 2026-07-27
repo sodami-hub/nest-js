@@ -24,14 +24,35 @@ export default () => {
     */
     passport.deserializeUser(async (id: string, done) => {
         try {
-            const { password, ...rest } = getTableColumns(users);
-            const user = await db
-                .select({
-                    ...rest,
-                })
-                .from(users)
-                .where(eq(users.id, id));
-            done(null, user[0]);
+            const user = await db.query.users.findFirst({
+                where: eq(users.id, id),
+                columns: {
+                    password: false,
+                },
+                with: {
+                    followers: {
+                        with: {
+                            follower: {
+                                columns: {
+                                    id: true,
+                                    nick: true,
+                                }
+                            },
+                        }
+                    },
+                    followings: {
+                        with: {
+                            following: {
+                                columns: {
+                                    id: true,
+                                    nick: true,
+                                }
+                            }
+                        }
+                    },
+                }
+            })
+            done(null, user);
         } catch (err) {
             console.error(err);
             done(err);

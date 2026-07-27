@@ -10,6 +10,8 @@ import passport from 'passport';
 import type { MyError } from './types/type.ts';
 import pageRouter from './routes/page.ts';
 import authRouter from './routes/auth.ts';
+import postRouter from './routes/post.ts';
+import userRouter from './routes/user.ts';
 import passportConfig from './passport/index.ts';
 
 const app = express();
@@ -24,6 +26,7 @@ nunjucks.configure('views', {
 
 app.use(morgan('dev'));
 app.use(express.static(path.join(import.meta.dirname, 'public')));
+app.use('/img', express.static(path.join(import.meta.dirname, 'uploads')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
@@ -43,6 +46,8 @@ app.use(passport.session()); // passport 세션 연결
 
 app.use('/', pageRouter);
 app.use('/auth', authRouter);
+app.use('/post', postRouter);
+app.use('/user', userRouter);
 
 app.use((req, res, next) => {
     const error: MyError = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
