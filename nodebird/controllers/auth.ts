@@ -8,16 +8,16 @@ import type { MessageType as msgType } from '../types/type.ts';
 import type { MyError } from '../types/type.ts';
 
 export const join = async (req: Request, res: Response, next: NextFunction) => {
-    const { id, nick, password } = req.body;
+    const { email, nick, password } = req.body;
     try {
-        const exUser = await db.select().from(users).where(eq(users.id, id)).limit(1);
+        const exUser = await db.select().from(users).where(eq(users.id, email)).limit(1);
 
         if (exUser.length) {
             return res.redirect('/join?error=exist');
         }
         const hash = await bcrypt.hash(password, 12); // Rounds of hashing, 12 이상 추천, 최대 31
         await db.insert(users).values({
-            id,
+            id: email,
             nick,
             password: hash,
         });

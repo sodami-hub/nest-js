@@ -24,6 +24,7 @@ export const renderMain = async (req: Request, res: Response, next: NextFunction
             },
             orderBy: desc(posts.createdAt),
         });
+        console.log('twits:', twits);
         res.render('main', { title: 'NodeBird', twits });
     } catch (error) {
         console.error(error);

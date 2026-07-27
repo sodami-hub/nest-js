@@ -14,26 +14,35 @@ import { users } from '../drizzle/schema.ts';
 passport.authenticate('local', callback()) 미들웨어의 콜백함수로 전달된다. done() 함수는 3개의 인자를 받는다.
 */
 export default () => {
-    passport.use(new LocalStrategy({
-        usernameField: 'id',
-        passwordField: 'password',
-        passReqToCallback: false, // req 객체를 콜백으로 전달
-    }, async (id, password, done) => {
-        try {
-            const exUser = await db.select().from(users).where(eq(users.id, id)).limit(1);
-            if(exUser.length)   {
-                const result = await bcrypt.compare(password, exUser[0]?.password ?? '');
-                if(result) {
-                    done(null, exUser[0], undefined); // 로그인 성공
-                } else {
-                    done(null, false, { message: '비밀번호가 일치하지 않습니다.' });
+    passport.use(
+        new LocalStrategy(
+            {
+                usernameField: 'email',
+                passwordField: 'password',
+                passReqToCallback: false, // req 객체를 콜백으로 전달
+            },
+            async (email, password, done) => {
+                try {
+                    const exUser = await db
+                        .select()
+                        .from(users)
+                        .where(eq(users.id, email))
+                        .limit(1);
+                    if (exUser.length) {
+                        const result = await bcrypt.compare(password, exUser[0]?.password ?? '');
+                        if (result) {
+                            done(null, exUser[0], undefined); // 로그인 성공
+                        } else {
+                            done(null, false, { message: '비밀번호가 일치하지 않습니다.' });
+                        }
+                    } else {
+                        done(null, false, { message: '가입되지 않은 회원입니다.' });
+                    }
+                } catch (error) {
+                    console.error(error);
+                    done(error, false, undefined);
                 }
-            } else {
-                done(null, false, { message: '가입되지 않은 회원입니다.' });
-            }
-        }catch (error) {
-            console.error(error);
-            done(error, false, undefined);
-        }
-    }));
+            },
+        ),
+    );
 };

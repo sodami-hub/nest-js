@@ -1,4 +1,5 @@
 export type MyError = Error & { status?: number };
+export type MessageType = { message: string } | string;
 
 type FollowUser = {
     id: string;
@@ -12,13 +13,13 @@ declare global {
             nick: string;
             provider: 'local' | 'kakao';
 
-            followers: Array<{
+            followers?: Array<{
                 followerId: string;
                 followingId: string;
                 follower: FollowUser;
             }>;
 
-            followings: Array<{
+            followings?: Array<{
                 followerId: string;
                 followingId: string;
                 following: FollowUser;

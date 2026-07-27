@@ -2,15 +2,10 @@ import db from '../drizzle/connection.ts';
 import { follows, users } from '../drizzle/schema.ts';
 import { eq } from 'drizzle-orm';
 import type { Request, Response, NextFunction } from 'express';
-import type { MyUserType as myUserType } from '../types/type.ts';
 
-export const follow = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-) => {
+export const follow = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const loggedInUser = req.user as myUserType | undefined;
+        const loggedInUser = req.user;
         if (!loggedInUser) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
