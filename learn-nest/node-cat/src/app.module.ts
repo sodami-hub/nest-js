@@ -9,7 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 - ConfigModule을 연결하면 AppController, AppService의 constructor에서 ConfigService를 통해 .env 파일에 있는 환경변수를 가져올 수 있다.
 */
 @Module({
-  imports: [AuthModule, ConfigModule.forRoot({isGlobal: true})], // ConfigModule.forRoot({isGlobal: true}) : ConfigModule을 전역 모듈로 설정하여 다른 모듈에서 import 없이 ConfigService를 사용할 수 있도록 한다.
+  imports: [AuthModule, ConfigModule.forRoot({ isGlobal: true })], // ConfigModule.forRoot({isGlobal: true}) : ConfigModule을 전역 모듈로 설정하여 다른 모듈에서 import 없이 ConfigService를 사용할 수 있도록 한다.
   controllers: [AppController],
   providers: [AppService],
 })

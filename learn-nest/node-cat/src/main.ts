@@ -11,23 +11,25 @@ async function bootstrap() {
 
   app.use(morgan('dev'));
   app.use(cookieParser(process.env.COOKIE_SECRET));
-  app.use(session({
-    resave: false,
-    saveUninitialized: false,
-    secret: process.env.COOKIE_SECRET!,
-    cookie: {
-      httpOnly: true,
-      secure: false,
-    }
-  }));
+  app.use(
+    session({
+      resave: false,
+      saveUninitialized: false,
+      secret: process.env.COOKIE_SECRET!,
+      cookie: {
+        httpOnly: true,
+        secure: false,
+      },
+    }),
+  );
   app.use(passport.initialize());
-  app.use(passport.session())
+  app.use(passport.session());
 
-  await app.listen(process.env.PORT ?? 3000,()=> {
-    console.log(`Server is running on http://localhost:${process.env.PORT ?? 3000}`);
+  await app.listen(process.env.PORT ?? 3000, () => {
+    console.log(
+      `Server is running on http://localhost:${process.env.PORT ?? 3000}`,
+    );
   });
 }
 
 bootstrap();
-
-
