@@ -4,6 +4,8 @@
 /build
 /tmp
 node_modules
+dist
+test
 
 # Logs
 logs
