@@ -6,6 +6,7 @@
 node_modules
 dist
 test
+temp
 
 # Logs
 logs
