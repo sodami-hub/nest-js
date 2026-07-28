@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
+import { ConfigService } from '@nestjs/config';
 /*
 nest의 컨트롤러
 컨트롤러 + 라우터
@@ -10,10 +11,16 @@ this.appService : src/app.service.ts의 AppService 클래스의 인스턴스 => 
 */
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Get()
   getHello(): string {
+    console.log('PORT:', this.configService.get('PORT'));
+    console.log('COOKIE_SECRET:', this.configService.get('COOKIE_SECRET'));
+    console.log('KAKAO_ID:', process.env.KAKAO_ID);
     return this.appService.getHello();
   }
 }
