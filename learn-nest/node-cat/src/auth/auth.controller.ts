@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { IsLoggedInGuard } from './is-logged-in.guard';
 import { IsNotLoggedInGuard } from './is-not-logged-in.guard';
 import { ConfigService } from '@nestjs/config';
+import { LocalAuthGuard } from './local-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 // 내부에 선언하는 라우터 주소 앞에 모두 '/auth' 를 붙인다.
 @Controller('auth')
@@ -28,8 +30,8 @@ export class AuthController {
   join() {}
 
   // POST /auth/login
-  @UseGuards(IsNotLoggedInGuard)
-  @Post('lgoin')
+  @UseGuards(IsNotLoggedInGuard, LocalAuthGuard) // LocalAuthGuard를 사용하여 로그인 요청을 처리한다.
+  @Post('login')
   login() {}
 
   // GET /auth/logout
@@ -38,12 +40,12 @@ export class AuthController {
   logout() {}
 
   // GET /auth/kakao
-  @UseGuards(IsNotLoggedInGuard)
+  @UseGuards(IsNotLoggedInGuard, AuthGuard('kakao')) // passport.authenticate('kakao') 를 호출하여 카카오 로그인 요청을 처리한다.
   @Get('kakao')
   kakao() {}
 
   // GET /auth/kakao/callback
-  @UseGuards(IsNotLoggedInGuard)
+  @UseGuards(AuthGuard('kakao'))
   @Get('kakao/callback')
   kakaoCallback() {}
 }
