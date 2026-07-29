@@ -7,11 +7,14 @@ import {
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerMiddleware } from './logger/logger.middleware';
 import { AuthController } from './auth/auth.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { DrizzleModule } from './drizzle/drizzle.module';
 import path from 'node:path';
+import * as schema from './drizzle/schema';
+import * as relations from './drizzle/relations';
 
 /* ConfigModule.forRoot() : 환경변수 설정을 위해 ConfigModule을 import 한다. .env 파일에 있는 환경변수를 process.env 객체에 넣어준다.
 - 따라서 package.json 에 추가된 --env-file .env는 모두 지워도 된다.
@@ -26,7 +29,28 @@ import path from 'node:path';
     }),
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, '..', 'uploads'), // uploads 폴더를 정적 파일 제공 경로로 설정한다.
-      serveRoot: '/uploads', // /uploads 경로로 접근하면 uploads 폴더의 파일을 제공한다.
+      serveRoot: '/img', // /img 경로로 접근하면 img 폴더의 파일을 제공한다.
+    }),
+    DrizzleModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          mysql: {
+            user: 'root',
+            password: configService.get<string>('DB_PASSWORD'),
+            host: 'localhost',
+            port: 3306,
+            database: 'nodebird',
+            connectionLimit: 10,
+          },
+          config: {
+            logger: true,
+            schema: { ...schema, ...relations },
+            mode: 'default',
+          },
+        };
+      },
+      isGlobal: true,
     }),
   ],
   controllers: [AppController],
