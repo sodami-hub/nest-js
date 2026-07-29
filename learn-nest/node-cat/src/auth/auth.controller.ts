@@ -1,4 +1,11 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+  OnModuleInit,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { IsLoggedInGuard } from './is-logged-in.guard';
 import { IsNotLoggedInGuard } from './is-not-logged-in.guard';
@@ -8,7 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 // 내부에 선언하는 라우터 주소 앞에 모두 '/auth' 를 붙인다.
 @Controller('auth')
-export class AuthController {
+export class AuthController implements OnModuleInit, OnApplicationBootstrap {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService, // AppModule에만 ConfigModule을 연결했으므로 AuthModule에 연결된 AuthController에서 ConfigService를 사용하면 에러가 발생한다.
@@ -23,6 +30,12 @@ export class AuthController {
           imports: [ /* the Module containing ConfigService 
     */
   ) {}
+  onModuleInit() {
+    console.log('AuthController init.');
+  }
+  onApplicationBootstrap() {
+    console.log('AuthController bootstrapped.');
+  }
 
   // POST /auth/join
   @UseGuards(IsNotLoggedInGuard)

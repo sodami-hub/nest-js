@@ -1,4 +1,11 @@
-import { Controller, Get, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseInterceptors,
+  OnModuleInit,
+  OnApplicationBootstrap,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConfigService } from '@nestjs/config';
 import { LoggerInterceptor } from './logger/logger.interceptor';
@@ -12,11 +19,17 @@ this.appService : src/app.service.ts의 AppService 클래스의 인스턴스 => 
 */
 
 @Controller()
-export class AppController {
+export class AppController implements OnModuleInit, OnApplicationBootstrap {
   constructor(
     private readonly appService: AppService,
     private readonly configService: ConfigService,
   ) {}
+  onModuleInit() {
+    console.log('AppController init');
+  }
+  onApplicationBootstrap() {
+    console.log('AppController bootstrap');
+  }
 
   @UseInterceptors(LoggerInterceptor)
   @Get()

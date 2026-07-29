@@ -1,4 +1,9 @@
-import { Module, DynamicModule } from '@nestjs/common';
+import {
+  Module,
+  DynamicModule,
+  OnModuleInit,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { DrizzleMySqlService, DrizzleMySqlConfig } from './drizzle.service';
 
 interface DrizzleModuleConfig {
@@ -8,7 +13,14 @@ interface DrizzleModuleConfig {
 }
 
 @Module({})
-export class DrizzleModule {
+export class DrizzleModule implements OnModuleInit, OnApplicationBootstrap {
+  onModuleInit() {
+    console.log('DrizzleModule init.');
+  }
+  onApplicationBootstrap() {
+    console.log('DrizzleModule bootstrapped.');
+  }
+
   // forRootAsync : 비동기적으로 모듈을 설정할 수 있는 메서드로, provider를 통해 DrizzleMySqlConfig를 제공받아 DrizzleMySqlService를 생성한다.
   static forRootAsync(provider: DrizzleModuleConfig): DynamicModule {
     return {
