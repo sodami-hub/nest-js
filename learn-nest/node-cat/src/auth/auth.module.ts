@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, OnApplicationBootstrap } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { ConfigModule } from '@nestjs/config';
@@ -12,4 +12,11 @@ import { KakaoStrategy } from './kakao.strategy';
   controllers: [AuthController],
   providers: [AuthService, LocalSerializer, LocalStrategy, KakaoStrategy],
 })
-export class AuthModule {}
+export class AuthModule implements OnModuleInit, OnApplicationBootstrap {
+  onModuleInit() {
+    console.log('AuthModule init.');
+  }
+  onApplicationBootstrap() {
+    console.log('AuthModule bootstrapped.');
+  }
+}

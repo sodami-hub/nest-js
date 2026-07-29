@@ -3,6 +3,8 @@ import {
   MiddlewareConsumer,
   NestModule,
   RequestMethod,
+  OnModuleInit,
+  OnApplicationBootstrap,
 } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -12,9 +14,11 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 import { AuthController } from './auth/auth.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { DrizzleModule } from './drizzle/drizzle.module';
+import { PostModule } from './post/post.module';
 import path from 'node:path';
 import * as schema from './drizzle/schema';
 import * as relations from './drizzle/relations';
+import fs from 'node:fs';
 
 /* ConfigModule.forRoot() : 환경변수 설정을 위해 ConfigModule을 import 한다. .env 파일에 있는 환경변수를 process.env 객체에 넣어준다.
 - 따라서 package.json 에 추가된 --env-file .env는 모두 지워도 된다.
@@ -52,11 +56,30 @@ import * as relations from './drizzle/relations';
       },
       isGlobal: true,
     }),
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
+export class AppModule
+  implements NestModule, OnModuleInit, OnApplicationBootstrap
+{
+  onModuleInit() {
+    console.log('AppModule has been initialized.');
+  }
+
+  // uploads 폴더를 언제 생성하면 좋을까? => AppModule이 부트스트랩될 때 생성하는 것이 가장 좋다.
+  // AppModule은 서버가 포트에서 리스닝하기 전 마지막으로 실행되는 모듈이므로, AppModule이 부트스트랩될 때 uploads 폴더를 생성하면 된다.
+  onApplicationBootstrap() {
+    try {
+      fs.readdirSync(path.join(__dirname, 'uploads'));
+    } catch (error) {
+      console.error('uploads 폴더가 존재하지 않아 uploads 폴더를 생성합니다.');
+      fs.mkdirSync(path.join(__dirname, 'uploads'));
+    }
+    console.log('Application has been bootstrapped.');
+  }
+
   configure(consumer: MiddlewareConsumer) {
     // 모든 라우터에 대해 LoggerMiddleware를 적용한다. /auth와 그 하위 라우터에만 적용하고 싶으면 forRoutes('auth')로 변경하면 된다.
     // forRoutes({path: 'auth{*wildcard}', method: RequestMethod.ALL}) : 와일드 카드를 적용할 수 있으며, method도 지정할 수 있다.
