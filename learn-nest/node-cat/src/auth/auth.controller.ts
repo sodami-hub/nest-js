@@ -40,7 +40,7 @@ export class AuthController {
   logout() {}
 
   // GET /auth/kakao
-  @UseGuards(IsNotLoggedInGuard, AuthGuard('kakao')) // passport.authenticate('kakao') 를 호출하여 카카오 로그인 요청을 처리한다.
+  @UseGuards(AuthGuard('kakao')) // passport.authenticate('kakao') 를 호출하여 카카오 로그인 요청을 처리한다.
   @Get('kakao')
   kakao() {}
 
