@@ -12,6 +12,7 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 import { AuthController } from './auth/auth.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { DrizzleModule } from './drizzle/drizzle.module';
+import { PostModule } from './post/post.module';
 import path from 'node:path';
 import * as schema from './drizzle/schema';
 import * as relations from './drizzle/relations';
@@ -52,6 +53,7 @@ import * as relations from './drizzle/relations';
       },
       isGlobal: true,
     }),
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
