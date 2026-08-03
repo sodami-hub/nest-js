@@ -14,7 +14,8 @@ export class AppService implements OnModuleInit, OnApplicationBootstrap {
     console.log('AppService bootstrap');
   }
 
-  getHello(res: Response): void {
-    res.render('main');
+  getHello(res: Response) {
+    return 'hello world';
+    res.render('main', { title: 'Hello World!', message: 'Hello World!' });
   }
 }

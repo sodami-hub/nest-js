@@ -30,3 +30,17 @@ $ nest new node-cat [--skit-git]
 
 ## 순환참조 발생시 `🎈forwardRef`
 순환참조가 발생하는 의존성의 어느 한쪽의 생성자에 `@Inject(forwardRef(()=>['참조대상']))` 처리를 한다.
+
+## 핸들러에서 사용할 수 있는 매개변수 정리(네스트 매개변수 데코레이터 vs 익스프레스) 
+- @Request(), @Req              / req
+- @Response(), @Res             / res
+- @Next()                       / next
+- @Session()                    / req.session
+- @Param(param?: string)
+- @Body(param?: string)
+- @Query(param?: string)
+- @Headers(param?: string)
+- @Ip()
+- @HostParam()
+- @UploadedFile()
+- @UploadedFiles()

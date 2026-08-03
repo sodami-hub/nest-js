@@ -7,6 +7,7 @@ import {
   InternalServerErrorException,
   UseFilters,
   Res,
+  Query,
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConfigService } from '@nestjs/config';
@@ -40,13 +41,21 @@ export class AppController implements OnModuleInit, OnApplicationBootstrap {
 
   @Get()
   // @UseFilters(HttpFilter) // 필터 사용시 @UseFilters() 데코레이터 사용
-  @UseInterceptors(LoggerInterceptor) // 인터셉터 사용시 @UseInterceptors() 데코레이터 사용
-  getHello(@Res() res: Response): void {
+  //@UseInterceptors(LoggerInterceptor) // 인터셉터 사용시 @UseInterceptors() 데코레이터 사용
+  /*
+  @Res() : express의 Response 객체를 주입받음
+  @Query() : 쿼리스트링을 주입받음 
+  @Query('age') age: string : 쿼리스트링에서 age만 주입받음
+  
+  */
+  getHello(@Res() res: Response, @Query() query: Record<string, string>) {
     console.log(
       'from ConfigService Module:',
       this.configService.get('VIEW_CONFIG_SERVICE'),
     );
     console.log('from .env file:', process.env.VIEW_ENV_SERVICE);
-    return this.appService.getHello(res);
+    console.log(`query: ${JSON.stringify(query, null, 2)}`);
+    return res.status(200).json(query); // ⚠️@Res() 때문에 nestjs가 자동으로 응답을 처리하지 않음. 따라서 res.status(200).json()으로 직접 응답 처리
+    // return this.appService.getHello(res);
   }
 }
