@@ -25,6 +25,7 @@ import { posts, hashtags, postsToHashtags, users } from './drizzle/schema';
 import * as schema from './drizzle/schema';
 import { desc, eq } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
+import { RenderInterceptor } from './render/render.interceptor';
 /*
 nest의 컨트롤러
 컨트롤러 + 라우터
@@ -34,6 +35,7 @@ this.appService : src/app.service.ts의 AppService 클래스의 인스턴스 => 
   - constructor(생성자) 에서도 AppService를 주입받아야 함
 */
 
+@UseInterceptors(RenderInterceptor) // 인터셉터 사용시 @UseInterceptors() 데코레이터 사용
 @Controller()
 export class AppController implements OnModuleInit, OnApplicationBootstrap {
   constructor(
