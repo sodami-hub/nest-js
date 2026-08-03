@@ -15,6 +15,7 @@ import { LoggerInterceptor } from './logger/logger.interceptor';
 import { TooManyRequestsException } from './http/too-many-requests.exception';
 import { HttpFilter } from './http/http.filter';
 import type { Response } from 'express';
+import { User } from './auth/user.decorator';
 /*
 nest의 컨트롤러
 컨트롤러 + 라우터
@@ -57,5 +58,20 @@ export class AppController implements OnModuleInit, OnApplicationBootstrap {
     console.log(`query: ${JSON.stringify(query, null, 2)}`);
     return res.status(200).json(query); // ⚠️@Res() 때문에 nestjs가 자동으로 응답을 처리하지 않음. 따라서 res.status(200).json()으로 직접 응답 처리
     // return this.appService.getHello(res);
+  }
+
+  /*
+  커스텀 매개변수 데코레이터 @User() 사용 예시
+  @User() user: Express.User | undefined : @User() 데코레이터를 사용하여 Express.User 타입의 user 객체를 주입받음
+  @User('id') userId: string | undefined : @User('id') 데코레이터를 사용하여 user 객체에서 id 속성만 주입받음
+
+  이런 방법을 사용하는 이유. @Req() req 를 통해서 req.user를 직접 접근하는 것보다,
+  @User() 데코레이터를 사용하여 필요한 속성만 주입받는 것이 더 깔끔하고, 테스트하기도 용이함
+  기능적으로도 @Res() res 를 사용하게 되면 res 를 객체를 사용해서 반환해야되는 불편함이 있지만
+  이렇게 @User() 데코레이터를 사용하면 필요한 속성만 주입받아서 반환할 수 있음
+  */
+  @Get('user')
+  getUser(@User() user: Express.User | undefined) {
+    return user;
   }
 }

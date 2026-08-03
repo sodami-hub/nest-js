@@ -33,6 +33,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint.io/rules/no-unsafe-return': 'off',
     },
   },
 );
