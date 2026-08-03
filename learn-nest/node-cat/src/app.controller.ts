@@ -5,10 +5,13 @@ import {
   OnModuleInit,
   OnApplicationBootstrap,
   InternalServerErrorException,
+  UseFilters,
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConfigService } from '@nestjs/config';
 import { LoggerInterceptor } from './logger/logger.interceptor';
+import { TooManyRequestsException } from './http/too-many-requests.exception';
+import { HttpFilter } from './http/http.filter';
 /*
 nest의 컨트롤러
 컨트롤러 + 라우터
@@ -31,14 +34,17 @@ export class AppController implements OnModuleInit, OnApplicationBootstrap {
     console.log('AppController bootstrap');
   }
 
-  @UseInterceptors(LoggerInterceptor)
+  // @UseInterceptors(LoggerInterceptor)
+
   @Get()
+  @UseFilters(HttpFilter) // 필터 사용시 @UseFilters() 데코레이터 사용
   getHello(): string {
     console.log(
       'from ConfigService Module:',
       this.configService.get('VIEW_CONFIG_SERVICE'),
     );
     console.log('from .env file:', process.env.VIEW_ENV_SERVICE);
+    throw new TooManyRequestsException();
     return this.appService.getHello();
   }
 }
