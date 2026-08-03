@@ -1,4 +1,7 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'node:path';
+import nunjucks from 'nunjucks';
 import { AppModule } from './app.module';
 
 import morgan from 'morgan';
@@ -7,7 +10,12 @@ import session from 'express-session';
 import passport from 'passport';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const express = app.getHttpAdapter().getInstance();
+  const views = join(__dirname, '..', 'views');
+  nunjucks.configure(views, { express: express, watch: true });
+  app.setViewEngine('html');
+  app.setBaseViewsDir(views);
 
   app.use(morgan('dev'));
   app.use(cookieParser(process.env.COOKIE_SECRET));

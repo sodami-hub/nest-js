@@ -5,7 +5,6 @@ import { renderProfile, renderJoin, renderMain, renderHashtag } from '../control
 const router = express.Router();
 
 router.use((req, res, next) => {
-    
     res.locals.user = req.user;
     res.locals.followerCount = req.user?.followers?.length ?? 0;
     res.locals.followingCount = req.user?.followings?.length ?? 0;

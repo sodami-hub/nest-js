@@ -19,6 +19,9 @@ import path from 'node:path';
 import * as schema from './drizzle/schema';
 import * as relations from './drizzle/relations';
 import fs from 'node:fs';
+import { APP_FILTER } from '@nestjs/core';
+import { AllExceptionsFilter } from './common/all-exceptions.filter';
+import { UserModule } from './user/user.module';
 
 /* ConfigModule.forRoot() : 환경변수 설정을 위해 ConfigModule을 import 한다. .env 파일에 있는 환경변수를 process.env 객체에 넣어준다.
 - 따라서 package.json 에 추가된 --env-file .env는 모두 지워도 된다.
@@ -30,6 +33,7 @@ import fs from 'node:fs';
     ConfigModule.forRoot({ isGlobal: true }), // ConfigModule.forRoot({isGlobal: true}) : ConfigModule을 전역 모듈로 설정하여 다른 모듈에서 import 없이 ConfigService를 사용할 수 있도록 한다.
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, '..', 'public'), // public 폴더를 정적 파일 제공 경로로 설정한다.
+      renderPath: '',
     }),
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, '..', 'uploads'), // uploads 폴더를 정적 파일 제공 경로로 설정한다.
@@ -57,9 +61,14 @@ import fs from 'node:fs';
       isGlobal: true,
     }),
     PostModule,
+    UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // 모든 예외를 처리하는 필터를 전역으로 등록한다.
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+  ],
 })
 export class AppModule
   implements NestModule, OnModuleInit, OnApplicationBootstrap
