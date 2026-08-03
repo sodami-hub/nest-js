@@ -8,6 +8,9 @@ import {
   UseFilters,
   Res,
   Query,
+  Inject,
+  UseGuards,
+  Render,
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConfigService } from '@nestjs/config';
@@ -16,6 +19,12 @@ import { TooManyRequestsException } from './http/too-many-requests.exception';
 import { HttpFilter } from './http/http.filter';
 import type { Response } from 'express';
 import { User } from './auth/user.decorator';
+import { IsNotLoggedInGuard } from './auth/is-not-logged-in.guard';
+import { IsLoggedInGuard } from './auth/is-logged-in.guard';
+import { posts, hashtags, postsToHashtags, users } from './drizzle/schema';
+import * as schema from './drizzle/schema';
+import { desc, eq } from 'drizzle-orm';
+import { MySql2Database } from 'drizzle-orm/mysql2';
 /*
 nest의 컨트롤러
 컨트롤러 + 라우터
@@ -30,7 +39,11 @@ export class AppController implements OnModuleInit, OnApplicationBootstrap {
   constructor(
     private readonly appService: AppService,
     private readonly configService: ConfigService,
-  ) {}
+    @Inject('DRIZZLE')
+    private readonly db: MySql2Database<typeof schema>,
+  ) {
+    console.log('AppController constructor');
+  }
   onModuleInit() {
     console.log('AppController init');
   }
@@ -38,11 +51,71 @@ export class AppController implements OnModuleInit, OnApplicationBootstrap {
     console.log('AppController bootstrap');
   }
 
-  // @UseInterceptors(LoggerInterceptor)
+  @UseGuards(IsLoggedInGuard) // 로그인 상태에서만 접근 가능
+  @Render('profile')
+  @Get('profile')
+  renderProfile() {
+    return { title: '내 정보 - NodeBird' };
+  }
 
+  @UseGuards(IsNotLoggedInGuard) // 로그아웃 상태에서만 접근 가능
+  @Render('join')
+  @Get('join')
+  renderJoin() {
+    return { title: '회원가입 - NodeBird' };
+  }
+
+  @Render('main')
   @Get()
+  async renderMain() {
+    const twits = await this.db.query.posts.findMany({
+      with: {
+        user: {
+          columns: {
+            id: true,
+            nick: true,
+          },
+        },
+      },
+      orderBy: [desc(posts.createdAt)],
+    });
+    return {
+      title: 'NodeBird',
+      twits,
+    };
+  }
+
+  @Render('main')
+  @Get('search')
+  async renderSearch(@Res() res: Response, @Query('hashtag') query: string) {
+    if (!query) {
+      return res.redirect('/');
+    }
+
+    const result = await this.db
+      .select({
+        posts,
+        user: {
+          id: users.id,
+          nick: users.nick,
+        },
+      })
+      .from(posts)
+      .innerJoin(postsToHashtags, eq(posts.id, postsToHashtags.postId))
+      .innerJoin(hashtags, eq(hashtags.id, postsToHashtags.hashtagId))
+      .innerJoin(users, eq(posts.userId, users.id))
+      .where(eq(hashtags.title, query))
+      .orderBy(desc(posts.createdAt));
+
+    return {
+      title: `${query} | NodeBird`,
+      twits: result.map((row) => ({ ...row.posts, user: row.user })),
+    };
+  }
+
+  @Get('hello')
   // @UseFilters(HttpFilter) // 필터 사용시 @UseFilters() 데코레이터 사용
-  //@UseInterceptors(LoggerInterceptor) // 인터셉터 사용시 @UseInterceptors() 데코레이터 사용
+  // @UseInterceptors(LoggerInterceptor) // 인터셉터 사용시 @UseInterceptors() 데코레이터 사용
   /*
   @Res() : express의 Response 객체를 주입받음
   @Query() : 쿼리스트링을 주입받음 
