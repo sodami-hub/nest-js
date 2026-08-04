@@ -8,7 +8,7 @@ LocalSerializer 클래스는 PassportSerializer를 상속받는다.
  - 생성자 함수에서 super() 를 호출하여 부모 클래스의 생성자를 호출한다.
  - serializeUser(), deserializeUser() 를 반드시 구현해야 한다.
 */
-@Injectable()
+@Injectable() // @Injectable() 데코레이터가 붙어 있으면 프로바이더이다. 즉, 다른 클래스에서 의존성을 주입받을 수 있다.
 export class LocalSerializer extends PassportSerializer {
   constructor(
     // 클래스의 경우에는 @Inject('프로바이더이름') 없어도 의존성을 주입할 수 있다. 그러나 { provide: '이름' } 형태로 만든 프로바이더는 반드시 @Inject('이름') 데코레이터를 사용해야 한다.
