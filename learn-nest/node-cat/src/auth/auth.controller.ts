@@ -5,6 +5,12 @@ import {
   UseGuards,
   OnModuleInit,
   OnApplicationBootstrap,
+  UsePipes,
+  ValidationPipe,
+  Redirect,
+  Body,
+  Res,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { IsLoggedInGuard } from './is-logged-in.guard';
@@ -12,6 +18,8 @@ import { IsNotLoggedInGuard } from './is-not-logged-in.guard';
 import { ConfigService } from '@nestjs/config';
 import { LocalAuthGuard } from './local-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
+import { JoinDto } from './dto/join.dto';
+import type { Request, Response } from 'express';
 
 // 내부에 선언하는 라우터 주소 앞에 모두 '/auth' 를 붙인다.
 @Controller('auth')
@@ -39,18 +47,39 @@ export class AuthController implements OnModuleInit, OnApplicationBootstrap {
 
   // POST /auth/join
   @UseGuards(IsNotLoggedInGuard)
+  @UsePipes(ValidationPipe) // DTO에 정의된 유효성 검증을 수행한다.
+  @Redirect('/') // 회원가입 성공 시 메인 페이지로 리다이렉트한다.
   @Post('join')
-  join() {}
+  async join(@Body() body: JoinDto) {
+    try {
+      await this.authService.join(body);
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message === '이미 존재하는 사용자입니다.'
+      ) {
+        return { url: '/join?error=exist' }; // 회원가입 실패 시 join 페이지로 리다이렉트한다.
+      }
+      return {
+        url: `/join?error=${error instanceof Error ? error.message : String(error)}`,
+      }; // 회원가입 실패 시 join 페이지로 리다이렉트한다.
+    }
+  }
 
   // POST /auth/login
   @UseGuards(IsNotLoggedInGuard, LocalAuthGuard) // LocalAuthGuard를 사용하여 로그인 요청을 처리한다.
+  @Redirect('/') // 로그인 성공 시 메인 페이지로 리다이렉트한다.
   @Post('login')
   login() {}
 
   // GET /auth/logout
   @UseGuards(IsLoggedInGuard)
   @Get('logout')
-  logout() {}
+  logout(@Req() req: Request, @Res() res: Response) {
+    req.logout(() => {
+      res.redirect('/');
+    });
+  }
 
   // GET /auth/kakao
   @UseGuards(AuthGuard('kakao')) // passport.authenticate('kakao') 를 호출하여 카카오 로그인 요청을 처리한다.
@@ -60,5 +89,6 @@ export class AuthController implements OnModuleInit, OnApplicationBootstrap {
   // GET /auth/kakao/callback
   @UseGuards(AuthGuard('kakao'))
   @Get('kakao/callback')
+  @Redirect('/') // 카카오 로그인 성공 시 메인 페이지로 리다이렉트한다.
   kakaoCallback() {}
 }

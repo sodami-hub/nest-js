@@ -1,8 +1,28 @@
-import { Controller, Post, UseInterceptors, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseInterceptors,
+  UseGuards,
+  UploadedFile,
+  Redirect,
+  Inject,
+  Body,
+  Param,
+  Get,
+  ParseIntPipe,
+  ValidationPipe,
+  UsePipes,
+} from '@nestjs/common';
 import { PostService } from './post.service';
 import { FileInterceptor, NoFilesInterceptor } from '@nestjs/platform-express';
 import { IsLoggedInGuard } from '../auth/is-logged-in.guard';
 import multer from 'multer';
+import { posts, hashtags, postsToHashtags } from '../drizzle/schema';
+import * as schema from '../drizzle/schema';
+import { eq } from 'drizzle-orm';
+import { MySql2Database } from 'drizzle-orm/mysql2';
+import { User } from '../auth/user.decorator';
+import { CreatePostDto } from './dto/create-post.dto';
 
 /*
 👍인터셉터!!
@@ -21,16 +41,85 @@ import multer from 'multer';
 */
 @Controller('post')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    @Inject('DRIZZLE')
+    private readonly db: MySql2Database<typeof schema>,
+  ) {}
 
+  /*
+  @Param@, @Body(), @Query() 로 받아온 개별 속성의 자료형은 전부 문자열이다. 숫자로 사용하고 싶다면 parseInt()로 변환해야 한다.
+  ✨ 이런 상황에서 ParseIntPipe를 사용하면 @Param('id', ParseIntPipe) id: number 처럼 바로 숫자로 받을 수 있다.
+  ParseIntPipe 외에도 ParseBoolPipe, ParseArrayPipe, ParseUUIDPipe, ParseDatePipe, ParseEnumPipe, ValidationPipe, DefaultValuePipe, CustomPipe 등 다양한 파이프가 있다.
+  🎈 또한 url에 parseInt 할 수 없는 문자열을 넣는다면 에러가 발생한다. ParseIntPipe는 데이터를 원하는 자료형으로 변환하기도 하지만 데이터가 형식에 맞는지 검증하는 역할도 한다.
+  */
+  @Get(':id')
+  getPost(@Param('id', ParseIntPipe) id: number) {
+    console.log(id);
+  }
+
+
+
+
+  /*
+  🙌 아래 핸들러를 보면 content, url 값을 각각 @Body() 로 받아오고 있다. 이런식으로 개별적으로 받아오고 검사해도 되지만(검사하는 부분은 아직 미구현)
+  속성이 두 개 이상일 때부터는 클래스를 사용하여 검증/변환하는 것이 편리하다. 클래스를 통해 검사해보겠다.
+  🎈 class-validator, class-transformer 패키지를 설치하고, ./dto/create-post.dto.ts 에서 CreatePostDto 클래스를 만들어 content, url 속성을 정의하고,
+  @Body()에 CreatePostDto를 넣어주면 된다.
+  */
   @UseGuards(IsLoggedInGuard)
   @UseInterceptors(NoFilesInterceptor())
+  // @UsePipes(new ValidationPipe({ transform: true })) // 핸들러에 @UsePipes() 데코레이터를 사용해서 파이프를 한번에 장착할 수 있다.
+  @Redirect('/')
   @Post()
-  uploadPost() {}
+  async uploadPost(
+    @Body(new ValidationPipe({ transform: true })) body: CreatePostDto, // dto에 @Transform() 데코레이터를 사용했기 때문에 ValidationPipe에 transform: true 옵션을 넣어야 한다.
+    @User() user: Express.User,
+  ) {
+    await this.db.insert(posts).values({
+      content: body.content,
+      img: body.url,
+      userId: user.id,
+    });
+    const result = await this.db.execute('SELECT LAST_INSERT_ID() as insertId');
+    const insertId = (result[0] as unknown as { insertId: number }[])[0]
+      ?.insertId;
+    const hashtag = body.content.match(/#[^\s#]*/g);
+    if (insertId && hashtag) {
+      const result = await Promise.all(
+        hashtag.map(async (tag) => {
+          const ex = await this.db
+            .select()
+            .from(hashtags)
+            .where(eq(hashtags.title, tag.slice(1).toLowerCase()))
+            .limit(1);
+          if (ex.length) {
+            return ex[0];
+          }
+          await this.db.insert(hashtags).values({
+            title: tag.slice(1).toLowerCase(),
+          });
+          const newHashtags = await this.db
+            .select()
+            .from(hashtags)
+            .where(eq(hashtags.title, tag.slice(1).toLowerCase()))
+            .limit(1);
+          return newHashtags[0];
+        }),
+      );
+      await this.db.insert(postsToHashtags).values(
+        result.map((hashtag) => ({
+          postId: insertId,
+          hashtagId: hashtag.id,
+        })),
+      );
+    }
+  }
 
   @UseGuards(IsLoggedInGuard)
   @UseInterceptors(
     FileInterceptor('img', {
+      limits: { fileSize: 5 * 1024 * 1024 },
       storage: multer.diskStorage({
         destination(req, file, cb) {
           cb(null, 'uploads/');
@@ -40,9 +129,10 @@ export class PostController {
           cb(null, `${Date.now()}.${ext}`);
         },
       }),
-      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   @Post('img')
-  uploadPostImg() {}
+  uploadPostImg(@UploadedFile() file: Express.Multer.File) {
+    return { url: `/img/${file.filename}` };
+  }
 }
