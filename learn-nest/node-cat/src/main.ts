@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
+import { SessionSocketIoAdapter } from './auth/socket-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -19,19 +20,23 @@ async function bootstrap() {
 
   app.use(morgan('dev'));
   app.use(cookieParser(process.env.COOKIE_SECRET));
-  app.use(
-    session({
-      resave: false,
-      saveUninitialized: false,
-      secret: process.env.COOKIE_SECRET!,
-      cookie: {
-        httpOnly: true,
-        secure: false,
-      },
-    }),
-  );
+
+  // 익스프레스 세션 미들웨어를 익스프레스와 웹 소켓 모두에서 사용할 수 있도록 설정
+  const sessionMiddleware = session({
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.COOKIE_SECRET!,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+    },
+  });
+  app.use(sessionMiddleware);
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Socket.IO 어뎁터 설정 - 세션 공유를 위함
+  app.useWebSocketAdapter(new SessionSocketIoAdapter(app, sessionMiddleware));
 
   await app.listen(process.env.PORT ?? 3000, () => {
     console.log(

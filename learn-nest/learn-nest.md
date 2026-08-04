@@ -14,6 +14,7 @@ $ nest new node-cat [--skit-git]
 * nest g gu [파일이름] : 가드를 추가하는 명령어
 * nest g mi [파일이름] : 미들웨어를 추가하는 명령어
 * nest g f [이름] : 필터 생성
+* nest g ga [게이트웨이이름] : 게이트웨이 생성
 
 ![그림 01](./temp/image.png "auth를 추가한 상태의 프로젝트 구조") 
 
