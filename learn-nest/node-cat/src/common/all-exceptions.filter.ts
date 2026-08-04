@@ -10,11 +10,49 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { WsException } from '@nestjs/websockets';
+import type { Request, Response } from 'express';
+import type { Socket } from 'socket.io';
 
 @Catch() // 인수가 없으므로 모든 예외 발생 시 catch 메서드가 실행 됨, app.module.ts 에 연결해서 모든 핸들러에 연결되도록 한다.
 export class AllExceptionsFilter implements ExceptionFilter {
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const contextType = host.getType();
+
+    if (contextType === 'http') {
+      this.handleHttpException(exception, host);
+    } else if (contextType === 'ws') {
+      this.handleWsException(exception, host);
+    } else {
+      console.error('알 수 없는 컨텍스트에서 예외 발생:', exception);
+    }
+  }
+
+  private handleWsException(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToWs();
+    const client = ctx.getClient<Socket>();
+
+    let message = '서버 오류 발생';
+    let errorCode = 'INTERNAL_SERVER_ERROR';
+
+    if (exception instanceof WsException) {
+      message = exception.message;
+      errorCode = 'WEBSOCKET_ERROR';
+    } else if (exception instanceof Error) {
+      message = exception.message;
+      errorCode = 'GENERAL_ERROR';
+    }
+
+    console.error(exception);
+    // 웹 소켓 클라이언트에게 오류 전송
+    client.emit('error', {
+      code: errorCode,
+      message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  private handleHttpException(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const req = ctx.getRequest<Request>();
     const res = ctx.getResponse<Response>();

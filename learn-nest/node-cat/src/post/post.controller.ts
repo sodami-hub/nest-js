@@ -58,9 +58,6 @@ export class PostController {
     console.log(id);
   }
 
-
-
-
   /*
   🙌 아래 핸들러를 보면 content, url 값을 각각 @Body() 로 받아오고 있다. 이런식으로 개별적으로 받아오고 검사해도 되지만(검사하는 부분은 아직 미구현)
   속성이 두 개 이상일 때부터는 클래스를 사용하여 검증/변환하는 것이 편리하다. 클래스를 통해 검사해보겠다.
@@ -69,51 +66,14 @@ export class PostController {
   */
   @UseGuards(IsLoggedInGuard)
   @UseInterceptors(NoFilesInterceptor())
-  // @UsePipes(new ValidationPipe({ transform: true })) // 핸들러에 @UsePipes() 데코레이터를 사용해서 파이프를 한번에 장착할 수 있다.
+  @UsePipes(new ValidationPipe({ transform: true })) // 핸들러에 @UsePipes() 데코레이터를 사용해서 파이프를 한번에 장착할 수 있다.
   @Redirect('/')
   @Post()
-  async uploadPost(
+  uploadPost(
     @Body(new ValidationPipe({ transform: true })) body: CreatePostDto, // dto에 @Transform() 데코레이터를 사용했기 때문에 ValidationPipe에 transform: true 옵션을 넣어야 한다.
     @User() user: Express.User,
   ) {
-    await this.db.insert(posts).values({
-      content: body.content,
-      img: body.url,
-      userId: user.id,
-    });
-    const result = await this.db.execute('SELECT LAST_INSERT_ID() as insertId');
-    const insertId = (result[0] as unknown as { insertId: number }[])[0]
-      ?.insertId;
-    const hashtag = body.content.match(/#[^\s#]*/g);
-    if (insertId && hashtag) {
-      const result = await Promise.all(
-        hashtag.map(async (tag) => {
-          const ex = await this.db
-            .select()
-            .from(hashtags)
-            .where(eq(hashtags.title, tag.slice(1).toLowerCase()))
-            .limit(1);
-          if (ex.length) {
-            return ex[0];
-          }
-          await this.db.insert(hashtags).values({
-            title: tag.slice(1).toLowerCase(),
-          });
-          const newHashtags = await this.db
-            .select()
-            .from(hashtags)
-            .where(eq(hashtags.title, tag.slice(1).toLowerCase()))
-            .limit(1);
-          return newHashtags[0];
-        }),
-      );
-      await this.db.insert(postsToHashtags).values(
-        result.map((hashtag) => ({
-          postId: insertId,
-          hashtagId: hashtag.id,
-        })),
-      );
-    }
+    return this.postService.create(body, user.id);
   }
 
   @UseGuards(IsLoggedInGuard)
