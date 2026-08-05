@@ -9,9 +9,13 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
 import { SessionSocketIoAdapter } from './auth/socket-io.adapter';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // app.useGlobalPipes(new ValidationPipe({ transform: true })); // ✨파이프 전역으로 등록하기, 반드시 new를 사용해서 인스턴스화해야 된다.
+
   const express = app.getHttpAdapter().getInstance();
   const views = join(__dirname, '..', 'views');
   nunjucks.configure(views, { express: express, watch: true });

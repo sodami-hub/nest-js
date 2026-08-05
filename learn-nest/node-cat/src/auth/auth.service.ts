@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import * as schema from '../drizzle/schema';
 import { JoinDto } from './dto/join.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 /*
 컨트롤러와 서비스의 분리
@@ -16,6 +17,7 @@ import { JoinDto } from './dto/join.dto';
 export class AuthService {
   constructor(
     @Inject('DRIZZLE') private readonly db: MySql2Database<typeof schema>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async join(joinDto: JoinDto) {
@@ -30,5 +32,11 @@ export class AuthService {
     }
     const hashedPassword = await bcrypt.hash(password, 12);
     await this.db.insert(users).values({ id, nick, password: hashedPassword });
+
+    this.eventEmitter.emit('user.created', {
+      userId: id,
+      name: nick,
+      createdAt: new Date(),
+    });
   }
 }

@@ -4,11 +4,13 @@ import { posts, hashtags, postsToHashtags } from '../drizzle/schema';
 import * as schema from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PostService {
   constructor(
     @Inject('DRIZZLE') private readonly db: MySql2Database<typeof schema>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(createPostDto: CreatePostDto, userId: string) {
@@ -53,6 +55,14 @@ export class PostService {
           hashtagId: hashtag.id,
         })),
       );
+
+      // 게시글 생성 이벤트 발행 - 여러 서비스에서 동시에 처리된다.
+      this.eventEmitter.emit('post.created', {
+        postId,
+        userId,
+        content: createPostDto.content,
+        createdAt: new Date(),
+      });
     }
     return { postId: postId, ...createPostDto, userId };
   }
