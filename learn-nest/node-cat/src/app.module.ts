@@ -5,6 +5,7 @@ import {
   RequestMethod,
   OnModuleInit,
   OnApplicationBootstrap,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,11 +20,13 @@ import path from 'node:path';
 import * as schema from './drizzle/schema';
 import * as relations from './drizzle/relations';
 import fs from 'node:fs';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'; // 전역으로 등록하기 위한 import
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { UserModule } from './user/user.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EventsModule } from './events/events.module';
+import { LocalAuthGuard } from './auth/local-auth.guard';
+import { LoggerInterceptor } from './logger/logger.interceptor';
 
 /* ConfigModule.forRoot() : 환경변수 설정을 위해 ConfigModule을 import 한다. .env 파일에 있는 환경변수를 process.env 객체에 넣어준다.
 - 따라서 package.json 에 추가된 --env-file .env는 모두 지워도 된다.
@@ -70,6 +73,9 @@ import { EventsModule } from './events/events.module';
   controllers: [AppController],
   providers: [
     AppService,
+    // { provide: APP_GUARD, useClass: LocalAuthGuard }, // 전역 가드 등록
+    // { provide: APP_INTERCEPTOR, useClass: LoggerInterceptor }, // 전역 인터셉터 등록
+    // { provide: APP_PIPE, useValue: new ValidationPipe({ transform: true }) }, // 전역 파이프 등록, main.ts에서 연결했으므로 useValue를 사용한다.
     // 모든 예외를 처리하는 필터를 전역으로 등록한다.
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
