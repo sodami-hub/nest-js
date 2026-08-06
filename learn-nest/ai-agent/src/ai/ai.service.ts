@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OpenAIProvider } from './provider/openai.provider';
+import { ClaudeProvider } from './provider/claude.provider';
+import { GeminiProvider } from './provider/gemini.provider';
 import {
   IAIProvider,
   AIMessage,
@@ -20,12 +22,16 @@ export class AiService {
   constructor(
     private configService: ConfigService,
     private openAIProvider: OpenAIProvider,
+    private claudeProvider: ClaudeProvider,
+    private geminiProvider: GeminiProvider,
   ) {
     this.defaultProvider =
       this.configService.get<string>('app.defaultProvider') || 'openai';
 
     // Provider 등록
     this.providers.set('openai', this.openAIProvider);
+    this.providers.set('claude', this.claudeProvider);
+    this.providers.set('gemini', this.geminiProvider);
   }
 
   async generateText(

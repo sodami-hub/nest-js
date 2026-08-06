@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createOpenAI } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText, streamText } from 'ai';
 import {
   AIMessage,
@@ -10,22 +10,22 @@ import {
 } from '../interfaces/ai-provider.inferface';
 
 @Injectable()
-export class OpenAIProvider implements IAIProvider {
-  private openai;
+export class GeminiProvider implements IAIProvider {
+  private gemini;
   private model: string;
 
   constructor(private configService: ConfigService) {
-    const apiKey = this.configService.get<string>('openai.apiKey');
-    this.model = this.configService.get<string>('openai.model') || 'gpt-5.4';
+    const apiKey = this.configService.get<string>('gemini.apiKey');
+    this.model =
+      this.configService.get<string>('gemini.model') || 'claude-sonnet-4-6';
 
     if (!apiKey) {
       throw new Error(
-        'OPENAI_API_KEY is not defined in the environment variables.',
+        'GEMINI_API_KEY is not defined in the environment variables.',
       );
     }
 
-    this.openai = createOpenAI({
-      // createOpenAI 함수는 OpenAI API와 상호작용하기 위한 클라이언트를 생성하는 함수.
+    this.gemini = createGoogleGenerativeAI({
       apiKey,
     });
   }
@@ -35,7 +35,7 @@ export class OpenAIProvider implements IAIProvider {
     options?: AIGenerateOptions,
   ): Promise<AIRsponse> {
     const { text } = await generateText({
-      model: this.openai(this.model),
+      model: this.gemini(this.model),
       messages: messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
@@ -55,7 +55,7 @@ export class OpenAIProvider implements IAIProvider {
     options?: AIGenerateOptions,
   ): AsyncIterable<string> {
     const { textStream } = streamText({
-      model: this.openai(this.model),
+      model: this.gemini(this.model),
       messages: messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
