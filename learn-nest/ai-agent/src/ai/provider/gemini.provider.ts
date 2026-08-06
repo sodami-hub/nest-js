@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import {
+  createGoogleGenerativeAI,
+  type GoogleGenerativeAIProvider,
+} from '@ai-sdk/google';
 import { generateText, streamText } from 'ai';
 import {
   AIMessage,
@@ -11,7 +14,7 @@ import {
 
 @Injectable()
 export class GeminiProvider implements IAIProvider {
-  private gemini;
+  private gemini: GoogleGenerativeAIProvider;
   private model: string;
 
   constructor(private configService: ConfigService) {

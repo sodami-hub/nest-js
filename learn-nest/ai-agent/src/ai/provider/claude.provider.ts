@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createAnthropic } from '@ai-sdk/anthropic';
+import { createAnthropic, type AnthropicProvider } from '@ai-sdk/anthropic';
 import { generateText, streamText } from 'ai';
 import {
   AIMessage,
@@ -11,7 +11,7 @@ import {
 
 @Injectable()
 export class ClaudeProvider implements IAIProvider {
-  private anthropic;
+  private anthropic: AnthropicProvider;
   private model: string;
 
   constructor(private configService: ConfigService) {
