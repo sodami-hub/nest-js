@@ -18,7 +18,8 @@ async function bootstrap() {
   app.setBaseViewsDir(viewsPath);
   app.setViewEngine('html');
 
-  // 정적 파일 경로 설정
+  // 정적 파일 경로 설정 - nunjucks에서 사용하는 스크립트의 css, js, img 파일을 제공하기 위해 public 폴더를 정적 파일 경로로 설정한다.
+  // 즉 <link rel="stylesheet" href="/css/style.css" /> 과 같은 요청은 localhost:3000/css/style.css 로 요청이 들어오고 서버는 public/css/style.css 파일을 찾아서 제공한다.
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
   await app.listen(process.env.PORT ?? 3000);
