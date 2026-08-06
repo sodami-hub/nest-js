@@ -3,8 +3,15 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { AiModule } from './ai/ai.module';
+import { ChatModule } from './chat/chat.module';
 import configuration from './config/configuration';
 
+/* 스트리밍 채팅 구현
+$ nest g module chat
+$ nest g service chat
+$ nest g controller chat
+
+*/
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -12,6 +19,7 @@ import configuration from './config/configuration';
       isGlobal: true,
     }),
     AiModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

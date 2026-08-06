@@ -11,7 +11,10 @@ import {
   AIGenerateOptions,
   IAIProvider,
 } from '../interfaces/ai-provider.inferface';
-
+/*
+(*).provider.ts 들은 각 AI 업체의 모델과 실제로 통신하는 어댑터 역할을 한다.
+- 환경변수에서 API key와 모델이름을 가져와서 openai 클라이언트를 생성한다.
+*/
 @Injectable()
 export class OpenAIProvider implements IAIProvider {
   private openai: OpenAIClient;
