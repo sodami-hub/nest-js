@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createOpenAI } from '@ai-sdk/openai';
+import {
+  createOpenAI,
+  type OpenAIProvider as OpenAIClient,
+} from '@ai-sdk/openai';
 import { generateText, streamText } from 'ai';
 import {
   AIMessage,
@@ -11,7 +14,7 @@ import {
 
 @Injectable()
 export class OpenAIProvider implements IAIProvider {
-  private openai;
+  private openai: OpenAIClient;
   private model: string;
 
   constructor(private configService: ConfigService) {
