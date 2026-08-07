@@ -46,4 +46,20 @@ export default defineConfig(
       'prettier/prettier': ['warn', { endOfLine: 'lf' }],
     },
   },
+  {
+    // main.js 의 경우, tsconfig.json 에서 제외되어 있기 때문에 type checking 을 하지 않도록 설정하는 부분 
+    ...tseslint.configs.disableTypeChecked,
+    files: ['public/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        marked: 'readonly',
+      },
+      parserOptions: {
+        program: null,
+        project: false,
+        projectService: false,
+      },
+    },
+  },
 );

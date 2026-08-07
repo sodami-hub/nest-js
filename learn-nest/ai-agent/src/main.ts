@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'node:path';
 import * as nunjucks from 'nunjucks';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'; // 스웨거
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -28,6 +29,15 @@ async function bootstrap() {
   // 정적 파일 경로 설정 - nunjucks에서 사용하는 스크립트의 css, js, img 파일을 제공하기 위해 public 폴더를 정적 파일 경로로 설정한다.
   // 즉 <link rel="stylesheet" href="/css/style.css" /> 과 같은 요청은 localhost:3000/css/style.css 로 요청이 들어오고 서버는 public/css/style.css 파일을 찾아서 제공한다.
   app.useStaticAssets(join(__dirname, '..', 'public'));
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('AI Agent API')
+    .setDescription('AI Agent API 문서')
+    .setVersion('1.0')
+    .build();
+
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('swagger', app, swaggerDocument);
 
   await app.listen(process.env.PORT ?? 3000, () => {
     console.log(
