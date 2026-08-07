@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Res,
+  HttpStatus,
+  HttpException,
+  Delete,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { ChatService } from './chat.service';
 import { ChatMessageDto } from './dto/chat-message.dto';
@@ -77,6 +87,30 @@ export class ChatController {
       providers,
       default:
         this.configService.get<string>('app.defaultProvider') || 'openai',
+    };
+  }
+
+  @Get('history/:sessionId')
+  getHistory(@Param('sessionId') sessionId: string) {
+    const messages = this.chatService.getSessionMessages(sessionId);
+    return {
+      sessionId,
+      messages,
+      count: messages.length,
+    };
+  }
+
+  @Delete('session/:sessionId')
+  clearSession(@Param('sessionId') sessionId: string) {
+    const success = this.chatService.clearSession(sessionId);
+
+    if (!success) {
+      throw new HttpException('session not found', HttpStatus.NOT_FOUND);
+    }
+
+    return {
+      message: 'session cleared',
+      sessionId,
     };
   }
 }
