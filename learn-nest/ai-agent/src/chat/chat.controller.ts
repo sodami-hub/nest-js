@@ -13,6 +13,11 @@ export class ChatController {
     private aiService: AiService,
   ) {}
 
+  /*
+  🎈 이 메서드는 비동기제너레이터 함수가 아니다 즉 선언부에 * 이 없어도 된다.
+    - 비동기 제너레이터는 함수 내부에서 yield 키워드로 값을 반환하는 경우에 사용한다. 하지만 현재 streamChat()은 yield하지 않고, res.write()를 사용해서 응답을 하고 있다. 따라서 비동기 제너레이터로 선언할 필요가 없다.
+    - chatService.chatStream() 메서드는 비동기 함수이지만 반환값이 Promise가 아니라 AsyncIterable 이므로 await을 하지 않는다. 실제 값은 for await...of 루프에서 chunk로 받아서 처리한다.
+  */
   @Post('stream')
   async streamChat(
     @Body() chatMessageDto: ChatMessageDto,
