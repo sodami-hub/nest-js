@@ -1,5 +1,71 @@
+class SessionManager {
+  constructor() {
+    this.sessions = this.loadSessions();
+  }
+
+  loadSessions() {
+    const saved = localStorage.getItem('chatSessions');
+    return saved ? JSON.parse(saved) : [];
+  }
+
+  saveSessions() {
+    localStorage.setItem('chatSessions', JSON.stringify(this.sessions));
+  }
+
+  createSession() {
+    const session = {
+      id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title: '새로운 대화',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [],
+    };
+
+    this.sessions.unshift(session);
+    this.saveSessions();
+    return session;
+  }
+
+  getSession(id) {
+    return this.sessions.find((s) => s.id === id);
+  }
+
+  updateSession(id, data) {
+    const session = this.getSession(id);
+    if (session) {
+      Object.assign(session, data);
+      session.updatedAt = new Date().toISOString();
+
+      if (
+        data.messages &&
+        data.messages.length > 0 &&
+        session.title === '새로운 대화'
+      ) {
+        const firstUserMsg = data.messages.find((m) => m.type === 'user');
+        if (firstUserMsg) {
+          session.title = firstUserMsg.content.substring(0, 30) + '...';
+        }
+      }
+
+      this.saveSessions();
+    }
+  }
+
+  deleteSession(id) {
+    this.sessions = this.sessions.filter((s) => s.id !== id);
+    this.saveSessions();
+  }
+
+  getAllSessions() {
+    return [...this.sessions].sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+    );
+  }
+}
+
 class ChatApp {
   constructor() {
+    this.sessionManager = new SessionManager();
     this.sessionId = this.getOrCreateSessionId();
     this.currentProvider = '';
     this.isLoading = false;
@@ -24,7 +90,12 @@ class ChatApp {
     await this.loadProviders();
     this.attachEventListeners();
 
-    this.createNewSession();
+    const sessions = this.sessionManager.getAllSessions();
+    if (sessions.length > 0) {
+      this.loadSession(sessions[0].id);
+    } else {
+      this.createNewSession();
+    }
   }
 
   async loadProviders() {
@@ -91,6 +162,19 @@ class ChatApp {
     if (this.elements.toggleSidebarBtn) {
       this.elements.toggleSidebarBtn.addEventListener('click', () => {
         this.toggleSidebar();
+      });
+    }
+    // 새 대화 버튼 이벤트
+    const newChatBtn = document.getElementById('new-chat-btn');
+    if (newChatBtn) {
+      newChatBtn.addEventListener('click', () => {
+        if (
+          confirm(
+            '새로운 대화를 시작하시겠습니까? 현재 대화 내용이 초기화됩니다.',
+          )
+        ) {
+          this.createNewSession();
+        }
       });
     }
   }
@@ -246,6 +330,7 @@ class ChatApp {
           }
 
           if (data.done) {
+            this.saveMessageToSession(fullResponse, 'ai');
             break;
           }
         }
@@ -273,9 +358,115 @@ class ChatApp {
   }
 
   createNewSession() {
-    this.currentSession = {};
+    const session = this.sessionManager.createSession();
+    this.currentSession = session;
     this.elements.chatMessages.innerHTML = '';
     this.displayWelcomeMessage();
+    this.renderSessionsList();
+  }
+
+  loadSession(sessionId) {
+    const session = this.sessionManager.getSession(sessionId);
+    if (!session) return;
+
+    this.currentSession = session;
+    this.elements.chatMessages.innerHTML = '';
+
+    session.messages.forEach((msg) => {
+      this.addMessage(msg.content, msg.type, msg.type === 'ai', false);
+    });
+
+    if (session.messages.length === 0) {
+      this.displayWelcomeMessage();
+    }
+
+    this.renderSessionsList();
+    this.scrollToBottom();
+  }
+
+  saveMessageToSession(content, type) {
+    if (this.currentSession) {
+      this.currentSession.messages.push({
+        content,
+        type,
+        timestamp: new Date().toISOString(),
+      });
+
+      this.sessionManager.updateSession(this.currentSession.id, {
+        messages: this.currentSession.messages,
+      });
+
+      this.renderSessionsList();
+    }
+  }
+
+  renderSessionsList() {
+    const sessionsList = document.getElementById('sessions-list');
+    const sessions = this.sessionManager.getAllSessions();
+    sessionsList.innerHTML = sessions
+      .map(
+        (
+          session,
+        ) => `       <div class="session-item ${session.id === this.currentSession?.id ? 'active' : ''}"
+           data-session-id="${session.id}">
+        <div class="session-content">
+          <div class="session-title">${session.title}</div>
+          <div class="session-date">${this.formatDate(session.updatedAt)}</div>
+        </div>
+        <button class="delete-session-btn" data-session-id="${session.id}">
+            삭제
+        </button>
+      </div>
+    `,
+      )
+      .join('');
+
+    sessionsList.querySelectorAll('.session-item').forEach((item) => {
+      item.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('delete-session-btn')) {
+          const sessionId = item.dataset.sessionId;
+          this.loadSession(sessionId);
+        }
+      });
+    });
+
+    sessionsList.querySelectorAll('.delete-session-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const sessionId = btn.dataset.sessionId;
+        if (confirm('이 대화를 삭제하시겠습니까?')) {
+          this.deleteSession(sessionId);
+        }
+      });
+    });
+  }
+
+  deleteSession(sessionId) {
+    this.sessionManager.deleteSession(sessionId);
+
+    if (this.currentSession?.id === sessionId) {
+      this.createNewSession();
+    } else {
+      this.renderSessionsList();
+    }
+  }
+
+  formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return '방금 전';
+    if (diffMins < 60) return `${diffMins}분 전`;
+
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}시간 전`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}일 전`;
+
+    return date.toLocaleDateString('ko-KR');
   }
 
   displayWelcomeMessage() {
@@ -295,7 +486,12 @@ class ChatApp {
     }
   }
 
-  addMessage(content, type = 'user', renderMarkdown = false) {
+  addMessage(
+    content,
+    type = 'user',
+    renderMarkdown = false,
+    saveToSession = true,
+  ) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
 
@@ -313,6 +509,9 @@ class ChatApp {
       this.elements.chatMessages.appendChild(wrapper);
     } else {
       this.elements.chatMessages.appendChild(messageDiv);
+    }
+    if (saveToSession) {
+      this.saveMessageToSession(content, type);
     }
     this.scrollToBottom();
   }

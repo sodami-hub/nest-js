@@ -24,7 +24,7 @@
     "terminal.integrated.lineHeight": 1.5,
     "editor.fontLigatures": true,
     "editor.lineHeight": 1.5,
-    "editor.minimap.enabled": false,
+    "editor.minimap.enabled": true,
     "editor.tabSize": 2,
     "workbench.iconTheme": "material-icon-theme",
     "editor.semanticTokenColorCustomizations": {

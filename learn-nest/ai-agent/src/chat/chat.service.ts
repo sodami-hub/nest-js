@@ -24,7 +24,7 @@ export class ChatService {
       10,
     );
   }
-
+  // #region 세션 생생 및 가져오기
   getOrCreateSession(sessionId?: string): ChatSession {
     if (!sessionId) {
       sessionId = this.generateSessionId();
@@ -43,7 +43,9 @@ export class ChatService {
     }
     return session;
   }
+  // #endregion
 
+  // #region 메시지 관리
   addMessage(sessionId: string, message: AIMessage): void {
     const session = this.getOrCreateSession(sessionId);
     session.messages.push(message);
@@ -54,6 +56,7 @@ export class ChatService {
       session.messages = session.messages.slice(-this.maxHistoryLength * 2); // 오래된 메시지 제거
     }
   }
+  // #endregion
 
   getSessionMessages(sessionId: string): AIMessage[] {
     const session = this.sessions.get(sessionId);
@@ -105,5 +108,9 @@ export class ChatService {
   - .slice(2, 11): 앞의 0.을 제외하고 최대 9글자를 추출
   */
     return `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  }
+
+  clearSession(sessionId: string): boolean {
+    return this.sessions.delete(sessionId);
   }
 }
