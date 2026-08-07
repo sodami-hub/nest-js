@@ -56,7 +56,7 @@ export class ChatController {
   getProbiders() {
     const availableProviders = this.aiService.getAvailableProviders();
 
-    // 포로바이더 표시 이름 매핑
+    // 프로바이더 표시 이름 매핑
     const providerDisplayNames: Record<string, string> = {
       openai: 'GPT-5',
       claude: 'Claude',
@@ -65,7 +65,7 @@ export class ChatController {
 
     const providers = availableProviders.map((provider) => ({
       value: provider,
-      lavel: providerDisplayNames[provider] || provider,
+      label: providerDisplayNames[provider] || provider,
     }));
 
     return {
